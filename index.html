@@ -3,108 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ending</title>
+    <title>CountDown</title>
+    
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap');
+
         body {
-            font-family: 'Indie Flower', cursive;
-            background-image: url("https://i.pinimg.com/originals/cc/6b/c4/cc6bc4b7834cec1ccac8c195304d9d16.gif");
-            color: #f7ead3;
+            font-family: 'Shadows Into Light', cursive, sans-serif;
+            
+            /* Tu imagen de fondo de GitHub / URL */
+            background-image: url('https://i.pinimg.com/originals/cc/6b/c4/cc6bc4b7834cec1ccac8c195304d9d16.gif');
+            background-repeat: no-repeat;
+            background-size: cover;
+            
+            /* Mover la imagen de fondo: Primer valor (izq/der), Segundo valor (arriba/abajo) */
+            background-position: 50% 30%; 
+            
+            background-color: rgba(0, 0, 0, 0.6);
+            background-blend-mode: darken;
+            color: #fff9e6;
+            
+            /* Estilo Widget: Ocupa toda el área pero permite alinear el contenido */
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            align-items: center; /* Cambia a 'flex-start' si lo quieres a la izquierda o 'flex-end' a la derecha */
+            justify-content: center; /* Cambia a 'flex-start' para moverlo arriba */
             min-height: 100vh;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
+            box-sizing: border-box;
         }
 
         h1 {
-            font-size: 2.2rem;
-            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
             text-align: center;
-            color: #f7ead3;
+            color: #fff9e6;
+            letter-spacing: 2px;
         }
 
-        #contador {
+        /* CONTENEDOR HORIZONTAL */
+        #counter {
             display: flex;
-            flex-direction: column;
-            align-items: center;
+            flex-direction: row; /* Pone los elementos en fila horizontal */
+            flex-wrap: wrap;     /* Si la pantalla es muy chica, baja ordenadamente */
+            justify-content: center;
+            gap: 1.5rem;         /* Espacio horizontal entre cada unidad (Años, Días, etc.) */
         }
 
-        #contador div {
+        #counter div {
             text-align: center;
-            margin-bottom: 1.5rem;
         }
 
-        #contador span {
-            font-size: 2rem;
-            font-weight: bold;
+        #counter span {
+            font-size: 2.2rem;
             display: block;
-            color: #f7ead3;
+            color: #fff9e6;
+            line-height: 1;
         }
 
-        #contador p {
+        #counter p {
             font-size: 1.2rem;
             margin: 0;
-            color: #f7ead3;
+            color: #fff9e6;
+            letter-spacing: 1px;
         }
     </style>
 </head>
 <body>
-    <h1>Cuenta Regresiva dx</h1>
 
-    <div id="contador">
+    <h1>Countdown</h1>
+
+    <div id="counter">
         <div>
-            <span id="years">00</span>
-            <p>Años</p>
+            <span id="year">0</span>
+            <p>Year</p>
         </div>
         <div>
-            <span id="dias">000</span>
-            <p>Dias</p>
+            <span id="day">0</span>
+            <p>Day</p>
         </div>
         <div>
-            <span id="horas">00</span>
-            <p>Horas</p>
+            <span id="hour">0</span>
+            <p>Hour</p>
         </div>
         <div>
-            <span id="minutos">00</span>
-            <p>Minutos</p>
+            <span id="minute">0</span>
+            <p>Minute</p>
         </div>
         <div>
-            <span id="segundos">00</span>
-            <p>segundos</p>
+            <span id="second">0</span>
+            <p>Second</p>
         </div>
     </div>
 
     <script>
-        const fechalimit = new Date("2033-09-14T00:00:03").getTime();
-        function actualizarContador(){
+        // Fecha objetivo: Puedes cambiarla aquí (Año, Mes [0-11], Día, Hora, Minuto)
+        // Ojo: Los meses van de 0 (Enero) a 11 (Diciembre). Ejemplo: 31 de Diciembre de 2033
+        const fechalimit = new Date(2033, 11, 31, 23, 59, 59).getTime();
+
+        function actualizarContador() {
             const ahora = new Date().getTime();
             const diferencia = fechalimit - ahora;
 
-            if(diferencia <= 0){
-                document.getElementById("contador").innerHTML = "<h2>¡Tiempo cumplido!</h2>";
+            if (diferencia < 0) {
+                document.getElementById("counter").innerHTML = "<p>¡Tiempo cumplido!</p>";
                 return;
             }
 
-            const years = Math.floor(diferencia / (1000 * 60 * 60 * 24 * 365.25))
-            const dias = Math.floor((diferencia % (1000 * 60 * 60 * 24 * 365.25)) / (1000 * 60 * 60 *24));
-            const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
-            const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
+            // Cálculos de tiempo aproximados
+            const oneyear = 1000 * 60 * 60 * 24 * 365.25;
+            const oneday = 1000 * 60 * 60 * 24;
+            const onehour = 1000 * 60 * 60;
+            const oneminute = 1000 * 60;
 
-            document.getElementById("years").innerText = years;
-            document.getElementById("dias").innerText = dias;
-            document.getElementById("horas").innerText = horas;
-            document.getElementById("minutos").innerText = minutos;
-            document.getElementById("segundos").innerText = segundos;
+            const year = Math.floor(diferencia / oneyear);
+            const day = Math.floor((diferencia % oneyear) / oneday);
+            const hour = Math.floor((diferencia % oneday) / onehour);
+            const minute = Math.floor((diferencia % onehour) / oneminute);
+            const second = Math.floor((diferencia % oneminute) / 1000);
+
+            document.getElementById("year").innerText = year;
+            document.getElementById("day").innerText = day;
+            document.getElementById("hour").innerText = hour;
+            document.getElementById("minute").innerText = minute;
+            document.getElementById("second").innerText = second;
         }
-            setInterval(actualizarContador, 1000);
 
-            actualizarContador();
-
-        
+        setInterval(actualizarContador, 1000);
+        actualizarContador();
     </script>
-    
 </body>
 </html>
