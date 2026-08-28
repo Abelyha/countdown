@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ending</title>
+    <style>
+        body {
+            font-family: 'Indie Flower', cursive;
+            background-color: #1a1a1a;
+            color: #f7ead3;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: #f7ead3;
+        }
+
+        #contador {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #contador div {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        #contador span {
+            font-size: 2rem;
+            font-weight: bold;
+            display: block;
+            color: #f7ead3;
+        }
+
+        #contador p {
+            font-size: 1.2rem;
+            margin: 0;
+            color: #f7ead3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Cuenta Regresiva dx</h1>
+
+    <div id="contador">
+        <div>
+            <span id="years">00</span>
+            <p>Años</p>
+        </div>
+        <div>
+            <span id="dias">000</span>
+            <p>Dias</p>
+        </div>
+        <div>
+            <span id="horas">00</span>
+            <p>Horas</p>
+        </div>
+        <div>
+            <span id="minutos">00</span>
+            <p>Minutos</p>
+        </div>
+        <div>
+            <span id="segundos">00</span>
+            <p>segundos</p>
+        </div>
+    </div>
+
+    <script>
+        const fechalimit = new Date("2033-09-14T00:00:03").getTime();
+        function actualizarContador(){
+            const ahora = new Date().getTime();
+            const diferencia = fechalimit - ahora;
+
+            if(diferencia <= 0){
+                document.getElementById("contador").innerHTML = "<h2>¡Tiempo cumplido!</h2>";
+                return;
+            }
+
+            const years = Math.floor(diferencia / (1000 * 60 * 60 * 24 * 365.25))
+            const dias = Math.floor((diferencia % (1000 * 60 * 60 * 24 * 365.25)) / (1000 * 60 * 60 *24));
+            const horas = Math.floor((diferencia % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutos = Math.floor((diferencia % (1000 * 60 * 60)) / (1000 * 60));
+            const segundos = Math.floor((diferencia % (1000 * 60)) / 1000);
+
+            document.getElementById("years").innerText = years;
+            document.getElementById("dias").innerText = dias;
+            document.getElementById("horas").innerText = horas;
+            document.getElementById("minutos").innerText = minutos;
+            document.getElementById("segundos").innerText = segundos;
+        }
+            setInterval(actualizarContador, 1000);
+
+            actualizarContador();
+
+        
+    </script>
+    
+</body>
+</html>
