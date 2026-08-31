@@ -99,9 +99,8 @@
     </div>
 
     <script>
-        // Fecha objetivo: Puedes cambiarla aquí (Año, Mes [0-11], Día, Hora, Minuto)
-        // Ojo: Los meses van de 0 (Enero) a 11 (Diciembre). Ejemplo: 31 de Diciembre de 2033
-        const fechalimit = new Date(2033, 11, 31, 23, 59, 59).getTime();
+        //14/09/33 00:03
+        const fechalimit = new Date("2033-09-14T00:00:03").getTime();
 
         function actualizarContador() {
             const ahora = new Date().getTime();
