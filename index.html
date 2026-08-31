@@ -98,7 +98,29 @@
         </div>
     </div>
 
+     <audio id="background-music" loop>
+        <source src="DeathImageOSTIII.mp3" type="audio/mpeg">
+        Tu navegador no soporta el elemento de audio.
+    </audio>
+    
     <script>
+        function activarMusica() {
+            const music = document.getElementById('background-music');
+
+            music.volume = 0.5;
+            
+            music.play().then(() => {   
+                // Si la música arranca con éxito, cambiamos el texto del aviso y removemos este evento
+                document.removeEventListener('click', activarMusica);
+            }).catch(error => {
+                console.log("El navegador bloqueó la reproducción automática.", error);
+            });
+        }
+
+        // Escucha el primer clic en todo el documento HTML
+        document.addEventListener('click', activarMusica);
+
+        //-------------------------------------------------------------
         //14/09/33 00:03
         const fechalimit = new Date("2033-09-14T00:00:03").getTime();
 
