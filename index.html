@@ -103,6 +103,19 @@
     </audio>
     
     <script>
+
+        function activarMusica() {
+            const music = document.getElementById('background-music');
+
+            music.volume = 0.5;
+            
+            music.play().then(() => {   
+                // Si la música arranca con éxito, cambiamos el texto del aviso y removemos este evento
+                document.removeEventListener('click', activarMusica);
+            }).catch(error => {
+                console.log("El navegador bloqueó la reproducción automática.", error);
+            });
+        }
         // =============================================================
         // 1. CONEXIÓN A SUPABASE (Remplaza con tus datos reales)
         // =============================================================
