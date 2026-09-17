@@ -3,52 +3,45 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CountDown</title>
+    <title>CountDown / CountUp</title>
     
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Shadows+Into+Light&display=swap');
 
         body {
             font-family: 'Shadows Into Light', cursive, sans-serif;
-            
-            /* Tu imagen de fondo de GitHub / URL */
             background-image: url('https://i.pinimg.com/originals/cc/6b/c4/cc6bc4b7834cec1ccac8c195304d9d16.gif');
             background-repeat: no-repeat;
             background-size: cover;
-            
-            /* Mover la imagen de fondo: Primer valor (izq/der), Segundo valor (arriba/abajo) */
             background-position: 50% 30%; 
-            
             background-color: rgba(0, 0, 0, 0.6);
             background-blend-mode: darken;
             color: #fff9e6;
-            
-            /* Estilo Widget: Ocupa toda el área pero permite alinear el contenido */
             display: flex;
             flex-direction: column;
-            align-items: center; /* Cambia a 'flex-start' si lo quieres a la izquierda o 'flex-end' a la derecha */
-            justify-content: center; /* Cambia a 'flex-start' para moverlo arriba */
+            align-items: center; 
+            justify-content: center; 
             min-height: 100vh;
             margin: 0;
             padding: 15px;
             box-sizing: border-box;
+            user-select: none;
         }
 
-        h1 {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-            text-align: center;
-            color: #fff9e6;
-            letter-spacing: 2px;
+        #tz-indicator {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1rem;
+            opacity: 0.7;
         }
 
-        /* CONTENEDOR HORIZONTAL */
         #counter {
             display: flex;
-            flex-direction: row; /* Pone los elementos en fila horizontal */
-            flex-wrap: wrap;     /* Si la pantalla es muy chica, baja ordenadamente */
+            flex-direction: row; 
+            flex-wrap: wrap;     
             justify-content: center;
-            gap: 1.5rem;         /* Espacio horizontal entre cada unidad (Años, Días, etc.) */
+            gap: 1.5rem;         
             margin-bottom: 5rem;
         }
 
@@ -68,92 +61,257 @@
             margin: 0;
             color: #fff9e6;
             letter-spacing: 1px;
+            cursor: pointer;
+        }
+
+        #counter.single-mode div:not(.active) {
+            display: none;
         }
     </style>
 </head>
 <body>
 
+    <div id="tz-indicator">Zona: GMT-5 (Perú)</div>
     <p style="font-size: 40px;">Countdown</p>
 
     <div id="counter">
-        <div>
+        <div id="unit-year">
             <span id="year">0</span>
-            <p>Year</p>
+            <p id="label-year" onclick="toggleUnidad('year')">Year</p>
         </div>
-        <div>
+        <div id="unit-day">
             <span id="day">0</span>
-            <p>Day</p>
+            <p id="label-day" onclick="toggleUnidad('day')">Day</p>
         </div>
-        <div>
+        <div id="unit-hour">
             <span id="hour">0</span>
-            <p>Hour</p>
+            <p id="label-hour" onclick="toggleUnidad('hour')">Hour</p>
         </div>
-        <div>
+        <div id="unit-minute">
             <span id="minute">0</span>
-            <p>Minute</p>
+            <p id="label-minute" onclick="toggleUnidad('minute')">Minute</p>
         </div>
-        <div>
+        <div id="unit-second">
             <span id="second">0</span>
-            <p>Second</p>
+            <p id="label-second" onclick="toggleUnidad('second')">Second</p>
         </div>
     </div>
 
-     <audio id="background-music" loop>
+    <audio id="background-music" loop>
         <source src="OSTIII.mp3" type="audio/mpeg">
         Tu navegador no soporta el elemento de audio.
     </audio>
     
     <script>
-        function activarMusica() {
-            const music = document.getElementById('background-music');
+        // =============================================================
+        // 1. CONEXIÓN A SUPABASE (Remplaza con tus datos reales)
+        // =============================================================
+        const SUPABASE_URL = "https://nblghcsfzjzprajwrvze.supabase.co/rest/v1/";
+        const SUPABASE_KEY = "sb_publishable_10wjQk5NfDWkEv-bnzVhWw_g0O8Dx_U";
 
-            music.volume = 0.5;
-            
-            music.play().then(() => {   
-                // Si la música arranca con éxito, cambiamos el texto del aviso y removemos este evento
-                document.removeEventListener('click', activarMusica);
-            }).catch(error => {
-                console.log("El navegador bloqueó la reproducción automática.", error);
-            });
+        // =============================================================
+        // ESTADO GLOBAL
+        // =============================================================
+        let anioObjetivo = "2033";
+        let esGMT = false;            // false = GMT-5 (Perú), true = GMT/UTC pura
+        let modoCountUp = false;      // false = Regresivo, true = Ascendente continuo al terminar
+        let unidadActiva = null;
+
+        // =============================================================
+        // 2. FUNCIONES DE CONEXIÓN A SUPABASE
+        // =============================================================
+        
+        // Carga la configuración inicial almacenada en la base de datos
+        async function cargarConfiguracionSupabase() {
+            try {
+                const res = await fetch(`${SUPABASE_URL}/rest/v1/configuracion?select=clave,valor`, {
+                    headers: {
+                        "apikey": SUPABASE_KEY,
+                        "Authorization": `Bearer ${SUPABASE_KEY}`
+                    }
+                });
+                const data = await res.json();
+                
+                if (Array.isArray(data)) {
+                    data.forEach(item => {
+                        if (item.clave === 'target_year') anioObjetivo = item.valor;
+                        if (item.clave === 'modo_countup') modoCountUp = (item.valor === 'true');
+                    });
+                    actualizarContador();
+                }
+            } catch (error) {
+                console.error("Error al cargar datos desde Supabase:", error);
+            }
         }
 
-        // Escucha el primer clic en todo el documento HTML
-        document.addEventListener('click', activarMusica);
+        // Guarda cambios en Supabase cuando tecleas un comando
+        async function guardarEnSupabase(clave, valor) {
+            try {
+                await fetch(`${SUPABASE_URL}/rest/v1/configuracion?clave=eq.${clave}`, {
+                    method: "PATCH",
+                    headers: {
+                        "apikey": SUPABASE_KEY,
+                        "Authorization": `Bearer ${SUPABASE_KEY}`,
+                        "Content-Type": "application/json",
+                        "Prefer": "return=minimal"
+                    },
+                    body: JSON.stringify({ valor: valor })
+                });
+            } catch (error) {
+                console.error("Error al actualizar Supabase:", error);
+            }
+        }
 
-        //-------------------------------------------------------------
-        //14/09/33 00:03
-        const fechalimit = new Date("2033-09-14T00:00:03").getTime();
+        // Función para calcular la fecha en segundos Unix según la zona horaria
+        function obtenerTargetUnix() {
+            if (esGMT) {
+                return Math.floor(new Date(`${anioObjetivo}-09-14T00:00:03Z`).getTime() / 1000);
+            } else {
+                return Math.floor(new Date(`${anioObjetivo}-09-14T00:00:03-05:00`).getTime() / 1000);
+            }
+        }
 
-        function actualizarContador() {
-            const ahora = new Date().getTime();
-            const diferencia = fechalimit - ahora;
+        // =============================================================
+        // COMANDOS DE TECLADO INVISIBLES
+        // =============================================================
+        let bufferTeclas = "";
 
-            if (diferencia < 0) {
-                document.getElementById("counter").innerHTML = "<p>¡Tiempo cumplido!</p>";
-                return;
+        document.addEventListener('keydown', (e) => {
+            bufferTeclas += e.key.toLowerCase();
+            if (bufferTeclas.length > 10) bufferTeclas = bufferTeclas.slice(-10);
+
+            // Escribir "2036" cambia el año objetivo localmente y en Supabase
+            if (bufferTeclas.endsWith("2036")) {
+                anioObjetivo = "2036";
+                modoCountUp = false;
+                guardarEnSupabase('target_year', '2036');
+                guardarEnSupabase('modo_countup', 'false');
+                actualizarContador();
             }
 
-            // Cálculos de tiempo aproximados
-            const oneyear = 1000 * 60 * 60 * 24 * 365.25;
-            const oneday = 1000 * 60 * 60 * 24;
-            const onehour = 1000 * 60 * 60;
-            const oneminute = 1000 * 60;
+            // Escribir "up" activa la función para continuar en positivo al terminar
+            if (bufferTeclas.endsWith("up")) {
+                modoCountUp = true;
+                guardarEnSupabase('modo_countup', 'true');
+                actualizarContador();
+            }
 
-            const year = Math.floor(diferencia / oneyear);
-            const day = Math.floor((diferencia % oneyear) / oneday);
-            const hour = Math.floor((diferencia % oneday) / onehour);
-            const minute = Math.floor((diferencia % onehour) / oneminute);
-            const second = Math.floor((diferencia % oneminute) / 1000);
+            // Escribir "gmt" conmuta la zona horaria entre Perú y UTC
+            if (bufferTeclas.endsWith("gmt")) {
+                esGMT = !esGMT;
+                document.getElementById("tz-indicator").innerText = 
+                    esGMT ? "Zona: GMT (UTC)" : "Zona: GMT-5 (Perú)";
+                actualizarContador();
+            }
+        });
 
-            document.getElementById("year").innerText = year;
-            document.getElementById("day").innerText = day;
-            document.getElementById("hour").innerText = hour;
-            document.getElementById("minute").innerText = minute;
-            document.getElementById("second").innerText = second;
+        // =============================================================
+        // INTERFAZ Y VISTAS
+        // =============================================================
+        function toggleUnidad(unidad) {
+            const counterDiv = document.getElementById("counter");
+            const unidades = ['year', 'day', 'hour', 'minute', 'second'];
+
+            if (unidadActiva === unidad) {
+                unidadActiva = null;
+                counterDiv.classList.remove("single-mode");
+                unidades.forEach(u => document.getElementById(`unit-${u}`).classList.remove("active"));
+            } else {
+                unidadActiva = unidad;
+                counterDiv.classList.add("single-mode");
+                unidades.forEach(u => {
+                    const elem = document.getElementById(`unit-${u}`);
+                    if (u === unidad) elem.classList.add("active");
+                    else elem.classList.remove("active");
+                });
+            }
+            actualizarContador();
         }
 
+        function actualizarContador() {
+            const ahoraUnix = Math.floor(Date.now() / 1000);
+            const targetUnix = obtenerTargetUnix();
+            
+            // Calcula los segundos restantes hacia la fecha objetivo
+            let diferenciaSegundos = targetUnix - ahoraUnix;
+
+            if (diferenciaSegundos <= 0) {
+                if (modoCountUp) {
+                    // SI LA FUNCIÓN ESTÁ ACTIVADA: Continúa contando en positivo hacia adelante
+                    diferenciaSegundos = Math.abs(diferenciaSegundos);
+                } else {
+                    // SI LA FUNCIÓN NO ESTÁ ACTIVADA: Se congela exactamente en cero
+                    diferenciaSegundos = 0;
+                }
+            }
+
+            if (unidadActiva !== null) {
+                // --- VISTA ÚNICA CON DECIMALES ---
+                let valor = 0;
+                let etiqueta = "";
+
+                switch (unidadActiva) {
+                    case 'year':
+                        valor = (diferenciaSegundos / 31556926).toFixed(4);
+                        etiqueta = "Years";
+                        break;
+                    case 'day':
+                        valor = (diferenciaSegundos / 86400).toFixed(2);
+                        etiqueta = "Days";
+                        break;
+                    case 'hour':
+                        valor = (diferenciaSegundos / 3600).toFixed(2);
+                        etiqueta = "Hours";
+                        break;
+                    case 'minute':
+                        valor = (diferenciaSegundos / 60).toFixed(1);
+                        etiqueta = "Minutes";
+                        break;
+                    case 'second':
+                        valor = diferenciaSegundos.toFixed(0);
+                        etiqueta = "Seconds";
+                        break;
+                }
+
+                document.getElementById(unidadActiva).innerText = Number(valor).toLocaleString('es-ES');
+                document.getElementById(`label-${unidadActiva}`).innerText = etiqueta;
+
+            } else {
+                // --- VISTA DESGLOSADA DESDE UNIX ---
+                const year = Math.floor(diferenciaSegundos / 31556926);
+                let resto = diferenciaSegundos % 31556926;
+
+                const day = Math.floor(resto / 86400);
+                resto %= 86400;
+
+                const hour = Math.floor(resto / 3600);
+                resto %= 3600;
+
+                const minute = Math.floor(resto / 60);
+                const second = resto % 60;
+
+                document.getElementById("year").innerText = year;
+                document.getElementById("label-year").innerText = "Year";
+
+                document.getElementById("day").innerText = day;
+                document.getElementById("label-day").innerText = "Day";
+
+                document.getElementById("hour").innerText = hour;
+                document.getElementById("label-hour").innerText = "Hour";
+
+                document.getElementById("minute").innerText = minute;
+                document.getElementById("label-minute").innerText = "Minute";
+
+                document.getElementById("second").innerText = second;
+                document.getElementById("label-second").innerText = "Second";
+            }
+        }
+
+        // -------------------------------------------------------------
+        // INICIALIZACIÓN
+        // -------------------------------------------------------------
+        cargarConfiguracionSupabase(); // Lee la base de datos al abrir la página
         setInterval(actualizarContador, 1000);
-        actualizarContador();
     </script>
 </body>
 </html>
