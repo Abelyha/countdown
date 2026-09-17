@@ -71,7 +71,7 @@
 </head>
 <body>
 
-    <div id="tz-indicator">Zona: GMT-5 (Perú)</div>
+    <div id="tz-indicator"></div>
     <p style="font-size: 40px;">Countdown</p>
 
     <div id="counter">
@@ -202,8 +202,7 @@
             // Escribir "gmt" conmuta la zona horaria entre Perú y UTC
             if (bufferTeclas.endsWith("gmt")) {
                 esGMT = !esGMT;
-                document.getElementById("tz-indicator").innerText = 
-                    esGMT ? "Zona: GMT (UTC)" : "Zona: GMT-5 (Perú)";
+                document.getElementById("tz-indicator")
                 actualizarContador();
             }
         });
