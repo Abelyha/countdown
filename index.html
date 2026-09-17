@@ -97,25 +97,43 @@
         </div>
     </div>
 
-    <audio id="background-music" loop>
-        <source src="OSTIII.mp3" type="audio/mpeg">
-        Tu navegador no soporta el elemento de audio.
-    </audio>
+   <audio id="background-music"></audio>
     
     <script>
 
-        function activarMusica() {
-            const music = document.getElementById('background-music');
+        // 1. Lista con todas las canciones que quieras agregar
+        const playlist = [
+        "inThePool.opus",
+        "OSTIII.mp3"
+        // Puedes agregar más canciones aquí separadas por coma
+        ];
 
-            music.volume = 0.5;
-            
-            music.play().then(() => {   
-                // Si la música arranca con éxito, cambiamos el texto del aviso y removemos este evento
-                document.removeEventListener('click', activarMusica);
-            }).catch(error => {
-                console.log("El navegador bloqueó la reproducción automática.", error);
-            });
+        let currentIndex = 0;
+        const music = document.getElementById('background-music');
+
+        // 2. Función para cargar y poner a sonar la canción actual
+        function cargarYReproducir() {
+        music.src = playlist[currentIndex];
+        music.volume = 0.5;
+        music.play().catch(error => {
+            console.log("Error o bloqueo al reproducir:", error);
+        });
         }
+
+        // 3. Pasar a la siguiente canción al terminar
+        music.addEventListener('ended', () => {
+        // Pasa a la siguiente posición. El uso de '%' hace que vuelva a 0 al llegar al final (bucle)
+        currentIndex = (currentIndex + 1) % playlist.length;
+        cargarYReproducir();
+        });
+
+        // 4. Activar con el primer clic del usuario (requerido por políticas del navegador)
+        function activarMusica() {
+        cargarYReproducir();
+        document.removeEventListener('click', activarMusica);
+        }
+
+        document.addEventListener('click', activarMusica);
         // =============================================================
         // 1. CONEXIÓN A SUPABASE (Remplaza con tus datos reales)
         // =============================================================
