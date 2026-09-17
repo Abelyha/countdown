@@ -106,7 +106,7 @@
         // =============================================================
         // 1. CONEXIÓN A SUPABASE (Remplaza con tus datos reales)
         // =============================================================
-        const SUPABASE_URL = "https://nblghcsfzjzprajwrvze.supabase.co/rest/v1/";
+        const SUPABASE_URL = "https://nblghcsfzjzprajwrvze.supabase.co";
         const SUPABASE_KEY = "sb_publishable_10wjQk5NfDWkEv-bnzVhWw_g0O8Dx_U";
 
         // =============================================================
@@ -124,7 +124,9 @@
         // Carga la configuración inicial almacenada en la base de datos
         async function cargarConfiguracionSupabase() {
             try {
-                const res = await fetch(`${SUPABASE_URL}/rest/v1/configuracion?select=clave,valor`, {
+                // Limpiamos la URL por si acaso tiene barras al final
+                const urlBase = SUPABASE_URL.replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
+                const res = await fetch(`${urlBase}/rest/v1/configuracion?select=clave,valor`, {
                     headers: {
                         "apikey": SUPABASE_KEY,
                         "Authorization": `Bearer ${SUPABASE_KEY}`
@@ -140,14 +142,15 @@
                     actualizarContador();
                 }
             } catch (error) {
-                console.error("Error al cargar datos desde Supabase:", error);
+                console.error("Error al cargar configuración desde Supabase:", error);
             }
         }
 
-        // Guarda cambios en Supabase cuando tecleas un comando
         async function guardarEnSupabase(clave, valor) {
             try {
-                await fetch(`${SUPABASE_URL}/rest/v1/configuracion?clave=eq.${clave}`, {
+                // Limpiamos la URL para evitar que se duplique /rest/v1
+                const urlBase = SUPABASE_URL.replace(/\/+$/, "").replace(/\/rest\/v1$/, "");
+                await fetch(`${urlBase}/rest/v1/configuracion?clave=eq.${clave}`, {
                     method: "PATCH",
                     headers: {
                         "apikey": SUPABASE_KEY,
@@ -158,7 +161,7 @@
                     body: JSON.stringify({ valor: valor })
                 });
             } catch (error) {
-                console.error("Error al actualizar Supabase:", error);
+                console.error("Error al guardar en Supabase:", error);
             }
         }
 
